@@ -1,5 +1,9 @@
-<h1>Posts</h1>
-{{pid}}
-{{title}}
-{{content}}
-{{uid}}
+<div class="post-page-container">
+  <div class="post-title">
+    {{title}}
+  </div>
+  <div class="poster-details">
+    {{dateposted}} By {{forename}} {{surname}} <a href="/user/{{username}}">Profile</a>
+  </div>
+  {{content}}
+</div>

@@ -4,18 +4,23 @@
 <head>
   <meta charset="utf-8">
   <title>Run</title>
+  <link rel="stylesheet" href="/css/stylesheet.css">
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 </head>
 
 <body>
   <div class="site-header">
-    <a href="/">Home</a>
-    <a href="/login">Login</a>
-    <a href="/registration">Sign Up</a>
-    <a href="/user/{{liu}}" id="usr-profile">Profile</a>
+    <div class="header-left">
+      <a href="/">Home</a>
+    </div>
+    <div class="header-right">
+      {{{regOptions}}}
+    </div>
   </div>
+  <div class="container">
+    {{{body}}}
 
-  {{{body}}}
-
+  </div>
 </body>
 
 </html>

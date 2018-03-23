@@ -18,12 +18,12 @@
   },
   "homepage": "https://github.com/rossmuego/muego_ross_008101_coursework2#readme",
   "dependencies": {
-    "bcrypt": "^1.0.3",
     "body-parser": "^1.18.2",
     "cookie-parser": "^1.4.3",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
     "express-session": "^1.15.6",
+    "md5": "^2.2.1",
     "mongodb": "^3.0.4",
     "passport-local": "^1.0.0"
   }

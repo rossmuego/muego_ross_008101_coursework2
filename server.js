@@ -5,17 +5,21 @@ var mongo = require('mongodb');
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/";
 var app = express();
-var bcrypt = require('bcrypt');
 const path = require('path');
 var bodyParser = require("body-parser");
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 const Handlebars = require('handlebars');
-var logged_in_user = 0;
-var logged_in_username = ""
+var menubar = "<a href=" + '/login' + ">Login</a> <a href=" + '/registration' + "> Sign Up </a>"
+var md5 = require('md5');
+var sess;
 
 app.engine('handlebars', exphbs({
   defaultLayout: 'main'
+}));
+
+app.use(session({
+  secret: 'supersecret'
 }));
 
 app.set('view engine', 'handlebars');
@@ -41,7 +45,8 @@ app.get('/', function(req, res) {
         }
         res.render('home', {
           posts: result,
-          liu: logged_in_username
+          liu: req.session.loggedUsr,
+          regOptions: menubar
         });
         db.close();
       });
@@ -55,7 +60,25 @@ app.use(bodyParser.urlencoded({
 }));
 
 app.get('/post/new', function(req, res) {
-  res.render('createpost')
+  sess = req.session;
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.redirect('/login')
+  } else {
+    res.render('createpost', {
+      regOptions: menubar
+    })
+  }
+});
+
+app.get('/logout', function(req, res) {
+  menubar = "<a href=" + '/login' + ">Login</a> <a href=" + '/registration' + "> Sign Up </a>"
+  req.session.destroy(function(err) {
+    if (err) {
+      console.log(err);
+    } else {
+      res.redirect('/');
+    }
+  });
 });
 
 app.get('/user/:uid', function(req, res) {
@@ -72,20 +95,74 @@ app.get('/user/:uid', function(req, res) {
       }
       dbo.collection("posts").find(user).toArray(function(err, result) {
         if (err) throw err;
-        res.render('user', {
-          liu: logged_in_username,
-          uid: uresult[0].uid,
-          forename: uresult[0].forename,
-          surname: uresult[0].surname,
-          posts: result
+        for (var i = 0; i < result.length; i++) {
+          if (result[i].content.length > 1600) {
+            result[i].content = result[i].content.slice(0, 1600) + "... <a href=" + '/post/' + result[i].pid + ">See More</a>"
+          } else {
+            while (result[i].content.length < 1600) {
+              result[i].content += " "
+            }
+          }
+        }
+        var button_txt = "Follow"
+        var buttonClass = "follow-button"
+        var buttonRequest = "follow"
+
+        var obj = {
+          follower_id: req.session.loggedId,
+          followed_id: uresult[0].uid
+        }
+        dbo.collection("relationships").find(obj).toArray(function(err, sresult) {
+          if (sresult.length > 0) {
+            button_txt = "Unfollow"
+            buttonClass = "unfollow-button"
+            buttonRequest = "unfollow"
+          }
+
+          dbo.collection("relationships").find({}).toArray(function(err, rresult) {
+            dbo.collection("users").find({}).toArray(function(err, fresult) {
+              var followers = []
+              var following = []
+              for (var i = 0; i < rresult.length; i++) {
+                if (rresult[i].followed_id == uresult[0].uid) {
+                  followers.push(rresult[i])
+                } else if (rresult[i].follower_id == uresult[0].uid) {
+                  following.push(rresult[i])
+                }
+              }
+              if (req.session.loggedUsr == uresult[0].username) {
+                button_txt = "Edit Profile"
+                buttonClass = "edit-profile"
+                buttonRequest = "editprofile"
+              }
+              res.render('user', {
+                username: uresult[0].username,
+                liu: req.session.loggedUsr,
+                uid: uresult[0].uid,
+                forename: uresult[0].forename,
+                surname: uresult[0].surname,
+                posts: result,
+                regOptions: menubar,
+                profile_pic: uresult[0].profile_pic,
+                favlang: uresult[0].fav_lang,
+                location: uresult[0].location,
+                buttonText: button_txt,
+                buttonClass: buttonClass,
+                buttonRequest: buttonRequest,
+                followers: followers.length,
+                following: following.length
+              });
+              db.close();
+            });
+          });
         });
-        db.close();
       });
     });
   })
 });
 
 app.get('/post/:pid', function(req, res) {
+  sess = req.session
   MongoClient.connect(url, function(err, db) {
     if (err) throw err;
     var dbo = db.db("40280659");
@@ -94,45 +171,72 @@ app.get('/post/:pid', function(req, res) {
     };
     dbo.collection("posts").find(query).toArray(function(err, result) {
       if (err) throw err;
-      res.render('post', {
-        liu: logged_in_username,
-        pid: result[0].pid,
-        title: result[0].title,
-        content: result[0].content,
+      var user = {
         uid: result[0].uid
+      }
+      dbo.collection("users").find(user).toArray(function(err, uresult) {
+        if (err) throw err;
+
+        res.render('post', {
+          liu: sess.loggedUsr,
+          pid: result[0].pid,
+          title: result[0].title,
+          content: result[0].content,
+          uid: result[0].uid,
+          regOptions: menubar,
+          forename: uresult[0].forename,
+          surname: uresult[0].surname,
+          username: uresult[0].username,
+          dateposted: result[0].date_posted
+        });
+        db.close();
       });
-      db.close();
     });
   })
 });
 
 app.get('/login', function(req, res) {
-  res.render('login', {
-    liu: logged_in_username
-  });
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.render('login', {
+      liu: sess.loggedId,
+      regOptions: menubar
+    });
+  } else {
+    res.redirect('/user/' + sess.loggedUsr)
+  }
 });
 
 app.get('/registration', function(req, res) {
-  res.render('registration', {
-    liu: logged_in_username
-  });
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.render('registration', {
+      liu: req.session.loggedUsr,
+      regOptions: menubar
+    });
+  } else {
+    res.redirect('/user/' + sess.loggedUsr)
+  }
 });
 
 app.post('/login', function(req, res) {
+  sess = req.session
   MongoClient.connect(url, function(err, db) {
     if (err) throw err;
     var dbo = db.db("40280659");
     var query = {
       username: req.body.username,
-      password: req.body.password
+      password: md5(req.body.password)
     };
     dbo.collection("users").find(query).toArray(function(err, result) {
       if (err) throw err;
       if (result.length == 0) {
         res.redirect('/')
       } else {
-        logged_in_user = result[0].uid
-        logged_in_username = result[0].username;
+        sess.loggedId = result[0].uid
+        sess.loggedUsr = result[0].username;
+        menubar = "<a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
+        result[0].regOptions = menubar
         res.redirect('/user/' + result[0].username)
       }
       db.close();
@@ -141,6 +245,7 @@ app.post('/login', function(req, res) {
 });
 
 app.post('/registration', function(req, res) {
+  sess = req.session
   MongoClient.connect(url, function(err, db) {
     var dbo = db.db("40280659");
     var query = {
@@ -158,11 +263,13 @@ app.post('/registration', function(req, res) {
             forename: req.body.forename,
             surname: req.body.surname,
             username: req.body.username,
-            password: req.body.password
+            password: md5(req.body.password)
           }
           dbo.collection("users").insertOne(myobj, function(err, result) {
             if (err) throw err;
-            logged_in_username = myobj.username;
+            sess.loggedUsr = myobj.username;
+            sess.loggedId = myobj.uid
+            menubar = "<a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
             res.redirect('/user/' + myobj.username)
             db.close();
           });
@@ -173,24 +280,69 @@ app.post('/registration', function(req, res) {
 });
 
 app.post('/post/new', function(req, res) {
+  sess = req.session
   MongoClient.connect(url, function(err, db) {
     var dbo = db.db("40280659");
+    var d = new Date();
+    var myobj = {
+      pid: Date.now() + Math.floor(Math.random() * 100),
+      title: req.body.title,
+      content: req.body.content,
+      uid: sess.loggedId,
+      date_posted: d.toDateString()
+    }
+    dbo.collection("posts").insertOne(myobj, function(err, result) {
+      if (err) throw err;
+      res.redirect('/post/' + myobj.pid)
+      db.close();
+    });
+  });
+});
 
-    dbo.collection("posts").find({}).toArray(function(err, result) {
+app.post('/follow', function(req, res) {
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.redirect('back')
+  } else {
+    MongoClient.connect(url, function(err, db) {
+      var dbo = db.db("40280659");
       if (err) throw err;
       var myobj = {
-        pid: result.length + 1,
-        title: req.body.title,
-        content: req.body.content,
-        uid: logged_in_user,
+        followed_id: parseInt(req.body.uid),
+        follower_id: req.session.loggedId,
       }
-      dbo.collection("posts").insertOne(myobj, function(err, result) {
+      dbo.collection("relationships").insertOne(myobj, function(err, result) {
+        var user = {
+          uid: parseInt(req.body.uid)
+        }
+        dbo.collection("users").find(user).toArray(function(err, rresult) {
+          if (err) throw err;
+          res.redirect('/user/' + rresult[0].username)
+          db.close();
+        });
+      });
+    });
+  }
+});
+
+app.post('/unfollow', function(req, res) {
+  MongoClient.connect(url, function(err, db) {
+    var dbo = db.db("40280659");
+    if (err) throw err;
+    var myobj = {
+      followed_id: parseInt(req.body.uid),
+      follower_id: req.session.loggedId,
+    }
+    dbo.collection("relationships").deleteOne(myobj, function(err, obj) {
+      var user = {
+        uid: parseInt(req.body.uid)
+      }
+      dbo.collection("users").find(user).toArray(function(err, rresult) {
         if (err) throw err;
-        res.redirect('/post/' + myobj.pid)
+        res.redirect('/user/' + rresult[0].username)
         db.close();
       });
     });
-
   });
 });
 

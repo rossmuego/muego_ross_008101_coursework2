@@ -1,6 +1,35 @@
-<h1>Profile</h1> {{uid}} {{forename}} {{surname}}
-<br>
+<div class="profile-details">
+  <div class="profile-picture">
+    <img src="../assets/img/{{profile_pic}}" alt="Profile Picture">
+  </div>
+  <div class="profile-username">
+    {{username}}
+  </div>
+  <div class="profile-button-container">
+    <form action="/{{buttonRequest}}" method="post">
+      <button class="{{buttonClass}}" type="submit" name="uid" value="{{uid}}">{{buttonText}}</button>
+    </form>
+  </div>
+  <table class="follower-details">
+    <tr>
+      <td style="border-left: none">Following {{following}}</td>
+      <td>{{followers}} people follow</td>
+    </tr>
+  </table>
+  <table class="user-details">
+    <tr>
+      <td style="border-left: none">{{forename}} {{surname}}</td>
+      <td>{{location}}</td>
+      <td>{{favlang}}</td>
+    </tr>
+  </table>
+</div>
 {{#each posts}}
-  <h3>  {{title}}</h3> {{content}} {{pid}}
-  <br>
+  <div class="post">
+    <div class="post-header">
+      <a href="/post/{{pid}}">{{title}}</a>
+    </div>
+    {{{content}}}
+    <br>
+  </div>
 {{/each}}
