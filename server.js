@@ -32,6 +32,15 @@ app.get('/', function(req, res) {
     var dbo = db.db("40280659");
     dbo.collection("posts").find({}).toArray(function(err, result) {
       if (err) throw err;
+      for (var i = 0; i < result.length; i++) {
+        if (result[i].content.length > 1600) {
+          result[i].content = result[i].content.slice(0, 1600) + "... <a href=" + '/post/' + result[i].pid + ">See More</a>"
+        } else {
+          while (result[i].content.length < 1600) {
+            result[i].content += " "
+          }
+        }
+      }
       dbo.collection("users").find({}).toArray(function(err, uresult) {
         if (err) throw err;
         for (var i = 0; i < result.length; i++) {
@@ -176,20 +185,39 @@ app.get('/post/:pid', function(req, res) {
       }
       dbo.collection("users").find(user).toArray(function(err, uresult) {
         if (err) throw err;
-
-        res.render('post', {
-          liu: sess.loggedUsr,
-          pid: result[0].pid,
-          title: result[0].title,
-          content: result[0].content,
-          uid: result[0].uid,
-          regOptions: menubar,
-          forename: uresult[0].forename,
-          surname: uresult[0].surname,
-          username: uresult[0].username,
-          dateposted: result[0].date_posted
+        var post = {
+          postid: result[0].pid
+        }
+        dbo.collection("comments").find(post).toArray(function(err, cresult) {
+          if (err) throw err;
+          dbo.collection("users").find({}).toArray(function(err, curesult) {
+            if (err) throw err;
+            for (var i = cresult.length - 1; i >= 0; i--) {
+              for (var j = 0; j < curesult.length; j++) {
+                if (cresult[i].commenterid == curesult[j].uid) {
+                  cresult[i].username = curesult[j].username
+                  cresult[i].forename = curesult[j].forename
+                  cresult[i].surname = curesult[j].surname
+                  cresult[i].profile_pic = curesult[j].profile_pic
+                }
+              }
+            }
+            res.render('post', {
+              liu: sess.loggedUsr,
+              pid: result[0].pid,
+              title: result[0].title,
+              content: result[0].content,
+              uid: result[0].uid,
+              regOptions: menubar,
+              forename: uresult[0].forename,
+              surname: uresult[0].surname,
+              username: uresult[0].username,
+              dateposted: result[0].date_posted,
+              comments: cresult.reverse()
+            });
+            db.close();
+          });
         });
-        db.close();
       });
     });
   })
@@ -302,7 +330,7 @@ app.post('/post/new', function(req, res) {
 app.post('/follow', function(req, res) {
   sess = req.session
   if (!sess.loggedId && !sess.loggedUsr) {
-    res.redirect('back')
+    res.redirect('/login')
   } else {
     MongoClient.connect(url, function(err, db) {
       var dbo = db.db("40280659");
@@ -344,6 +372,28 @@ app.post('/unfollow', function(req, res) {
       });
     });
   });
+});
+
+app.post('/comment', function(req, res) {
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.redirect('/login')
+  } else {
+    MongoClient.connect(url, function(err, db) {
+      var dbo = db.db("40280659");
+      if (err) throw err;
+      var myobj = {
+        postid: parseInt(req.body.button),
+        commentContent: req.body.comment,
+        commenterid: req.session.loggedId
+      }
+      dbo.collection("comments").insertOne(myobj, function(err, obj) {
+        if (err) throw err;
+        res.redirect('/post/' + parseInt(req.body.button))
+        db.close();
+      });
+    });
+  }
 });
 
 app.listen(3000);

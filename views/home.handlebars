@@ -1,8 +1,17 @@
-{{#each posts}}
-  <div class="post">
+<div class="following-posts">
 
-    <h3>{{title}}</h3> {{content}} by {{forename}} {{surname}}
-    <a href="/user/{{opusr}}">Profile</a>
-    <br />
-  </div>
-{{/each}}
+</div>
+<div class="new-posts">
+
+</div>
+<div class="all-posts">
+  {{#each posts}}
+    <div class="post">
+      <div class="post-header">
+        <a href="/post/{{pid}}">{{title}}</a>
+      </div>
+      {{{content}}}
+      <br>
+    </div>
+  {{/each}}
+</div>

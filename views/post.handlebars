@@ -3,7 +3,25 @@
     {{title}}
   </div>
   <div class="poster-details">
-    {{dateposted}} By {{forename}} {{surname}} <a href="/user/{{username}}">Profile</a>
+    {{dateposted}} By <a href="/user/{{username}}">{{forename}} {{surname}}</a>
   </div>
   {{content}}
+  <div class="comments-section">
+    <div class="comment-box">
+      <form class="" action="/comment" method="post">
+        <textarea name="comment" rows="8" cols="80"></textarea>
+        <button class="commennt-button" type="submit" name="button" value="{{pid}}">Comment</button>
+      </form>
+    </div>
+    {{#each comments}}
+      <div class="comment-card">
+        <div class="comment-picture">
+          <a href="/user/{{username}}"><img src="/assets/img/{{profile_pic}}" alt="comment_pic"></a>
+        </div>
+        <div class="comment-content">
+          {{commentContent}}
+        </div>
+      </div>
+    {{/each}}
+  </div>
 </div>

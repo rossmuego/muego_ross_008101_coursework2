@@ -1,6 +1,16 @@
-<h1>Create Post</h1>
-<form action="/post/new" method="post">
-  <input type="text" name="title" placeholder="Title"/>
-  <textarea type="tex" name="content" placeholder="Content"></textarea>
-  <button type="submit" name="button">Create Post</button>
-</form>
+<div class="create-post">
+  <div class="create-post-title">
+    New Post
+  </div>
+  <form action="/post/new" method="post">
+    <div class="input-heading">
+      Title
+    </div>
+    <input type="text" name="title" required/>
+    <div class="input-heading">
+      Content
+    </div>
+    <textarea type="tex" name="content" required></textarea>
+    <button type="submit" name="button">Create Post</button>
+  </form>
+</div>
