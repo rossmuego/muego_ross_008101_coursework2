@@ -1,22 +1,28 @@
 var express = require('express');
+var app = express();
 var exphbs = require('express-handlebars');
 var url = require('url');
 var mongo = require('mongodb');
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/";
-var app = express();
-const path = require('path');
+var formidable = require('formidable');
 var bodyParser = require("body-parser");
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-const Handlebars = require('handlebars');
-var menubar = "<a href=" + '/login' + ">Login</a> <a href=" + '/registration' + "> Sign Up </a>"
+var Handlebars = require('handlebars');
+var path = require('path');
+var fs = require('fs');
 var md5 = require('md5');
+var fileUpload = require('express-fileupload');
+
+var menubar = "<a href=" + '/login' + ">Login</a> <a href=" + '/registration' + "> Sign Up </a>"
 var sess;
 
 app.engine('handlebars', exphbs({
   defaultLayout: 'main'
 }));
+
+app.use(fileUpload());
 
 app.use(session({
   secret: 'supersecret'
@@ -291,7 +297,10 @@ app.post('/registration', function(req, res) {
             forename: req.body.forename,
             surname: req.body.surname,
             username: req.body.username,
-            password: md5(req.body.password)
+            password: md5(req.body.password),
+            profile_pic: 'default.png',
+            location: req.body.location,
+            fav_lang: req.body.favlang
           }
           dbo.collection("users").insertOne(myobj, function(err, result) {
             if (err) throw err;
@@ -374,6 +383,59 @@ app.post('/unfollow', function(req, res) {
   });
 });
 
+app.post('/editprofile', function(req, res) {
+  res.redirect('/user/' + req.session.loggedUsr + '/editprofile')
+});
+
+app.get('/user/:uid/editprofile', function(req, res) {
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.redirect('/login')
+  } else {
+    res.render('editprofile')
+  }
+});
+
+app.post('/updateprofile', function(req, res) {
+
+  var fileName = Date.now() + Math.floor(Math.random() * 100)
+  if (!req.files.file) {
+    fileName = ""
+  } else {
+    let sampleFile = req.files.file;
+    sampleFile.mv('./assets/img/' + fileName + '.png', function(err) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+    });
+  }
+
+  var updateValues = req.body;
+  Object.keys(updateValues).forEach(function(key) {
+    if (updateValues[key].length <= 0) {
+      delete updateValues[key];
+    }
+  });
+  if (fileName != "") {
+    updateValues.profile_pic = fileName + ".png"
+  }
+  MongoClient.connect(url, function(err, db) {
+    var dbo = db.db("40280659");
+    if (err) throw err;
+    var myquery = {
+      uid: req.session.loggedId
+    };
+    var inputValues = {
+      $set: updateValues
+    }
+    dbo.collection("users").updateOne(myquery, inputValues, function(err, res) {
+      if (err) throw err;
+      db.close();
+    });
+    res.redirect('/user/' + req.session.loggedUsr)
+  });
+});
+
 app.post('/comment', function(req, res) {
   sess = req.session
   if (!sess.loggedId && !sess.loggedUsr) {
@@ -394,6 +456,15 @@ app.post('/comment', function(req, res) {
       });
     });
   }
+});
+
+app.get('/user/:uid/following', function(req, res) {
+  var user = req.params.uid
+
+});
+
+app.get('/user/:uid/followers', function(req, res) {
+
 });
 
 app.listen(3000);

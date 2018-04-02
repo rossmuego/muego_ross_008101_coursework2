@@ -6,6 +6,11 @@ body {
   overflow: hidden;
 }
 
+a:link{
+  text-decoration: none;
+  color: #DCDCDD;
+}
+
 .site-header {
   font-size: 25px;
   background-color: #1985A1;
@@ -245,6 +250,7 @@ body {
   max-height: 80px;
   min-height: 80px;
   font-size: 20px;
+  border-radius: 5px;
 }
 
 .commennt-button {
@@ -254,6 +260,7 @@ body {
   height: 80px;
   max-height: 80px;
   min-height: 80px;
+  border-radius: 5px;
 }
 
 .register-card {
@@ -263,7 +270,7 @@ body {
   margin-left: 40%;
   margin-top: 20%;
   border-radius: 5px;
-  height: 30%;
+  height: 35%;
   -webkit-box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
   -moz-box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
   box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
@@ -388,6 +395,34 @@ body {
   padding: 0px;
 }
 
-.all-posts {
-  
+.update-card {
+  background-color: #4C5C68;
+  width: 40%;
+  float: left;
+  margin-left: 30%;
+  margin-top: 15%;
+  border-radius: 5px;
+  height: 45%;
+  -webkit-box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
+  box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
+}
+
+.update-card input {
+  border-radius: 5px;
+  width: 70%;
+  text-align: center;
+  float: left;
+  margin: 5px 0 5px 15%;
+  height: 25px;
+  border: 1px;
+  padding: 0px;
+}
+
+.update-card button {
+  border-radius: 5px;
+  width: 70%;
+  height: 25px;
+  margin: 15px 0 10px 15%;
+  padding: 0px;
 }
