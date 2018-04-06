@@ -6,7 +6,7 @@ body {
   overflow: hidden;
 }
 
-a:link{
+a:link {
   text-decoration: none;
   color: #DCDCDD;
 }
@@ -76,6 +76,17 @@ a:link{
 
 .post-header {
   font-size: 50px;
+}
+
+.post-image {
+  width: 100%;
+  overflow: hidden;
+  height: 450px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+.post-image img {
+  width: 100%;
 }
 
 .post-header a {
@@ -383,7 +394,7 @@ a:link{
   margin: 5px 0 5px 15%;
   height: 60%;
   border: 1px;
-  height: 450px;
+  height: 400px;
   resize: none;
 }
 

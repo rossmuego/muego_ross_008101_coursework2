@@ -211,6 +211,7 @@ app.get('/post/:pid', function(req, res) {
             res.render('post', {
               liu: sess.loggedUsr,
               pid: result[0].pid,
+              postimage: result[0].post_image,
               title: result[0].title,
               content: result[0].content,
               uid: result[0].uid,
@@ -403,7 +404,7 @@ app.post('/updateprofile', function(req, res) {
     fileName = ""
   } else {
     let sampleFile = req.files.file;
-    sampleFile.mv('./assets/img/' + fileName + '.png', function(err) {
+    sampleFile.mv('./assets/profile/' + fileName + '.png', function(err) {
       if (err) {
         return res.status(500).send(err);
       }

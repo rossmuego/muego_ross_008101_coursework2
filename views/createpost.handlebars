@@ -2,7 +2,7 @@
   <div class="create-post-title">
     New Post
   </div>
-  <form action="/post/new" method="post">
+  <form action="/post/new" method="post" encType="multipart/form-data">
     <div class="input-heading">
       Title
     </div>
@@ -11,6 +11,10 @@
       Content
     </div>
     <textarea type="tex" name="content" required></textarea>
+    <div class="input-heading">
+      Post Image
+    </div>
+    <input type="file" name="file" accept="image/*">
     <button type="submit" name="button">Create Post</button>
   </form>
 </div>

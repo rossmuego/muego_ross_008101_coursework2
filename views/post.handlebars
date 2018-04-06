@@ -5,6 +5,9 @@
   <div class="poster-details">
     {{dateposted}} By <a href="/user/{{username}}">{{forename}} {{surname}}</a>
   </div>
+  <div class="post-image">
+    <img src="/assets/post/{{postimage}}" alt="post_title">
+  </div>
   {{content}}
   <div class="comments-section">
     <div class="comment-box">
@@ -16,7 +19,7 @@
     {{#each comments}}
       <div class="comment-card">
         <div class="comment-picture">
-          <a href="/user/{{username}}"><img src="/assets/img/{{profile_pic}}" alt="comment_pic"></a>
+          <a href="/user/{{username}}"><img src="/assets/profile/{{profile_pic}}" alt="comment_pic"></a>
         </div>
         <div class="comment-content">
           {{commentContent}}
