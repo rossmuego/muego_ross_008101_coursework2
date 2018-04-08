@@ -59,7 +59,7 @@ app.get('/', function(req, res) {
           }
         }
         res.render('home', {
-          posts: result,
+          posts: result.reverse(),
           liu: req.session.loggedUsr,
           regOptions: menubar
         });
@@ -281,40 +281,44 @@ app.post('/login', function(req, res) {
 
 app.post('/registration', function(req, res) {
   sess = req.session
-  MongoClient.connect(url, function(err, db) {
-    var dbo = db.db("40280659");
-    var query = {
-      username: req.body.username
-    }
-    dbo.collection("users").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      if (result.length > 0) {
-        res.redirect('/')
-      } else {
-        dbo.collection("users").find({}).toArray(function(err, result) {
-          if (err) throw err;
-          var myobj = {
-            uid: result.length + 1,
-            forename: req.body.forename,
-            surname: req.body.surname,
-            username: req.body.username,
-            password: md5(req.body.password),
-            profile_pic: 'default.png',
-            location: req.body.location,
-            fav_lang: req.body.favlang
-          }
-          dbo.collection("users").insertOne(myobj, function(err, result) {
-            if (err) throw err;
-            sess.loggedUsr = myobj.username;
-            sess.loggedId = myobj.uid
-            menubar = "<a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
-            res.redirect('/user/' + myobj.username)
-            db.close();
-          });
-        });
+  if (req.body.password != req.body.cpassword) {
+    res.redirect('/registration')
+  } else {
+    MongoClient.connect(url, function(err, db) {
+      var dbo = db.db("40280659");
+      var query = {
+        username: req.body.username
       }
+      dbo.collection("users").find(query).toArray(function(err, result) {
+        if (err) throw err;
+        if (result.length > 0) {
+          res.redirect('/')
+        } else {
+          dbo.collection("users").find({}).toArray(function(err, result) {
+            if (err) throw err;
+            var myobj = {
+              uid: result.length + 1,
+              forename: req.body.forename,
+              surname: req.body.surname,
+              username: req.body.username,
+              password: md5(req.body.password),
+              profile_pic: 'default.png',
+              location: req.body.location,
+              fav_lang: req.body.favlang
+            }
+            dbo.collection("users").insertOne(myobj, function(err, result) {
+              if (err) throw err;
+              sess.loggedUsr = myobj.username;
+              sess.loggedId = myobj.uid
+              menubar = "<a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
+              res.redirect('/user/' + myobj.username)
+              db.close();
+            });
+          });
+        }
+      });
     });
-  });
+  }
 });
 
 app.post('/post/new', function(req, res) {
@@ -393,7 +397,9 @@ app.get('/user/:uid/editprofile', function(req, res) {
   if (!sess.loggedId && !sess.loggedUsr) {
     res.redirect('/login')
   } else {
-    res.render('editprofile')
+    res.render('editprofile', {
+      regOptions: menubar
+    })
   }
 });
 

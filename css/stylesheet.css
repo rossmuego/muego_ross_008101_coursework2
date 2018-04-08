@@ -84,6 +84,9 @@ a:link {
   height: 450px;
   margin-bottom: 5px;
   border-radius: 5px;
+  -webkit-box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
+  box-shadow: 3px 3px 8px 1px rgba(0, 0, 0, 0.15);
 }
 .post-image img {
   width: 100%;
