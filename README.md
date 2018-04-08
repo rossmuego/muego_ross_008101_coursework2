@@ -6,4 +6,4 @@ Follow these steps in order to be able to run and use the blog.
 2. Run: 'npm install'
 3. To start the server, run the command: 'npm run start'
 
-4. To insert test data run the command: 'npm run inserted'
+4. To insert test data run the command: 'npm run insert'
