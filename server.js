@@ -198,6 +198,10 @@ app.get('/post/:pid', function(req, res) {
         var user = {
           uid: result[0].uid
         }
+        var optionsBarElem = "";
+        if (result[0].uid == req.session.loggedId) {
+          optionsBarElem = "<br><br><a href=" + '/post/' + parseInt(req.params.pid) + "/delete" + ">Delete Post</a><br><br><a href=" + '/post/' + parseInt(req.params.pid) + "/edit" + ">Edit Post</a>"
+        }
         dbo.collection("users").find(user).toArray(function(err, uresult) {
           if (err) throw err;
           var post = {
@@ -229,7 +233,8 @@ app.get('/post/:pid', function(req, res) {
                 surname: uresult[0].surname,
                 username: uresult[0].username,
                 dateposted: result[0].date_posted,
-                comments: cresult.reverse()
+                comments: cresult.reverse(),
+                optionsBar: optionsBarElem
               });
               db.close();
             });
@@ -238,6 +243,54 @@ app.get('/post/:pid', function(req, res) {
       }
     });
   })
+});
+
+app.get('/post/:pid/delete', function(req, res) {
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.render('login', {
+      liu: sess.loggedId,
+      regOptions: menubar
+    });
+  } else {
+    MongoClient.connect(url, function(err, db) {
+      var dbo = db.db("40280659");
+      if (err) throw err;
+      var myobj = {
+        pid: parseInt(req.params.pid)
+      }
+      dbo.collection("posts").deleteOne(myobj, function(err, obj) {
+        if (err) throw err;
+        res.redirect('/')
+        db.close();
+      });
+    });
+  }
+});
+
+app.get('/post/:pid/edit', function(req, res) {
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.render('login', {
+      liu: sess.loggedId,
+      regOptions: menubar
+    });
+  } else {
+    MongoClient.connect(url, function(err, db) {
+      if (err) throw err;
+      var dbo = db.db("40280659");
+      var query = {
+        pid: parseInt(req.params.pid)
+      };
+      dbo.collection("posts").find(query).toArray(function(err, result) {
+        res.render('updatepost', {
+          title: result[0].title,
+          content: result[0].content,
+          pid: result[0].pid
+        })
+      });
+    });
+  }
 });
 
 app.get('/login', function(req, res) {
@@ -359,6 +412,45 @@ app.post('/post/new', function(req, res) {
   });
 });
 
+app.post('/post/update', function(req, res) {
+  sess = req.session
+  var fileName = Date.now() + Math.floor(Math.random() * 100)
+  if (!req.files.file) {
+    fileName = ""
+  } else {
+    let sampleFile = req.files.file;
+    sampleFile.mv('./assets/post/' + fileName + '.png', function(err) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+    });
+  }
+  var updateValues = req.body;
+  Object.keys(updateValues).forEach(function(key) {
+    if (updateValues[key].length <= 0) {
+      delete updateValues[key];
+    }
+  });
+  if (fileName != "") {
+    updateValues.post_image = fileName + ".png"
+  }
+  MongoClient.connect(url, function(err, db) {
+    var dbo = db.db("40280659");
+    if (err) throw err;
+    var myquery = {
+      pid: parseInt(req.body.post)
+    };
+    var inputValues = {
+      $set: updateValues
+    }
+    dbo.collection("posts").updateOne(myquery, inputValues, function(err, res) {
+      if (err) throw err;
+      db.close();
+    });
+    res.redirect('/post/' + req.body.post)
+  });
+});
+
 app.post('/follow', function(req, res) {
   sess = req.session
   if (!sess.loggedId && !sess.loggedUsr) {
@@ -422,7 +514,6 @@ app.get('/user/:uid/editprofile', function(req, res) {
 });
 
 app.post('/updateprofile', function(req, res) {
-
   var fileName = Date.now() + Math.floor(Math.random() * 100)
   if (!req.files.file) {
     fileName = ""
@@ -534,7 +625,5 @@ app.get('/following', function(req, res) {
     });
   }
 });
-
-
 
 app.listen(3000);

@@ -1,0 +1,20 @@
+<div class="create-post">
+  <div class="create-post-title">
+    New Post
+  </div>
+  <form action="/post/update" method="post" encType="multipart/form-data">
+    <div class="input-heading">
+      Title
+    </div>
+    <input type="text" name="title" value="{{title}}" required/>
+    <div class="input-heading">
+      Content
+    </div>
+    <textarea type="tex" name="content" required>{{content}}</textarea>
+    <div class="input-heading">
+      Post Image
+    </div>
+    <input type="file" name="file" accept="image/*">
+    <button type="submit" name="post" value="{{pid}}">Update</button>
+  </form>
+</div>
