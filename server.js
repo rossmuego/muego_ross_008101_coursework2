@@ -414,41 +414,48 @@ app.post('/post/new', function(req, res) {
 
 app.post('/post/update', function(req, res) {
   sess = req.session
-  var fileName = Date.now() + Math.floor(Math.random() * 100)
-  if (!req.files.file) {
-    fileName = ""
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.render('login', {
+      liu: sess.loggedId,
+      regOptions: menubar
+    });
   } else {
-    let sampleFile = req.files.file;
-    sampleFile.mv('./assets/post/' + fileName + '.png', function(err) {
-      if (err) {
-        return res.status(500).send(err);
+    var fileName = Date.now() + Math.floor(Math.random() * 100)
+    if (!req.files.file) {
+      fileName = ""
+    } else {
+      let sampleFile = req.files.file;
+      sampleFile.mv('./assets/post/' + fileName + '.png', function(err) {
+        if (err) {
+          return res.status(500).send(err);
+        }
+      });
+    }
+    var updateValues = req.body;
+    Object.keys(updateValues).forEach(function(key) {
+      if (updateValues[key].length <= 0) {
+        delete updateValues[key];
       }
     });
-  }
-  var updateValues = req.body;
-  Object.keys(updateValues).forEach(function(key) {
-    if (updateValues[key].length <= 0) {
-      delete updateValues[key];
+    if (fileName != "") {
+      updateValues.post_image = fileName + ".png"
     }
-  });
-  if (fileName != "") {
-    updateValues.post_image = fileName + ".png"
-  }
-  MongoClient.connect(url, function(err, db) {
-    var dbo = db.db("40280659");
-    if (err) throw err;
-    var myquery = {
-      pid: parseInt(req.body.post)
-    };
-    var inputValues = {
-      $set: updateValues
-    }
-    dbo.collection("posts").updateOne(myquery, inputValues, function(err, res) {
+    MongoClient.connect(url, function(err, db) {
+      var dbo = db.db("40280659");
       if (err) throw err;
-      db.close();
+      var myquery = {
+        pid: parseInt(req.body.post)
+      };
+      var inputValues = {
+        $set: updateValues
+      }
+      dbo.collection("posts").updateOne(myquery, inputValues, function(err, res) {
+        if (err) throw err;
+        db.close();
+      });
+      res.redirect('/post/' + req.body.post)
     });
-    res.redirect('/post/' + req.body.post)
-  });
+  }
 });
 
 app.post('/follow', function(req, res) {
