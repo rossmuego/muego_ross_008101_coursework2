@@ -104,74 +104,80 @@ app.get('/user/:uid', function(req, res) {
       username: req.params.uid
     };
     dbo.collection("users").find(query).toArray(function(err, uresult) {
-      if (err) throw err;
-      var user = {
-        uid: uresult[0].uid
-      }
-      dbo.collection("posts").find(user).toArray(function(err, result) {
+      if (uresult.length == 0) {
+        res.redirect('/')
+      } else {
+
+
         if (err) throw err;
-        for (var i = 0; i < result.length; i++) {
-          if (result[i].content.length > 1600) {
-            result[i].content = result[i].content.slice(0, 1600) + "... <a href=" + '/post/' + result[i].pid + ">See More</a>"
-          } else {
-            while (result[i].content.length < 1600) {
-              result[i].content += " "
+        var user = {
+          uid: uresult[0].uid
+        }
+        dbo.collection("posts").find(user).toArray(function(err, result) {
+          if (err) throw err;
+          for (var i = 0; i < result.length; i++) {
+            if (result[i].content.length > 1600) {
+              result[i].content = result[i].content.slice(0, 1600) + "... <a href=" + '/post/' + result[i].pid + ">See More</a>"
+            } else {
+              while (result[i].content.length < 1600) {
+                result[i].content += " "
+              }
             }
           }
-        }
-        var button_txt = "Follow"
-        var buttonClass = "follow-button"
-        var buttonRequest = "follow"
+          var button_txt = "Follow"
+          var buttonClass = "follow-button"
+          var buttonRequest = "follow"
 
-        var obj = {
-          follower_id: req.session.loggedId,
-          followed_id: uresult[0].uid
-        }
-        dbo.collection("relationships").find(obj).toArray(function(err, sresult) {
-          if (sresult.length > 0) {
-            button_txt = "Unfollow"
-            buttonClass = "unfollow-button"
-            buttonRequest = "unfollow"
+          var obj = {
+            follower_id: req.session.loggedId,
+            followed_id: uresult[0].uid
           }
+          dbo.collection("relationships").find(obj).toArray(function(err, sresult) {
+            if (sresult.length > 0) {
+              button_txt = "Unfollow"
+              buttonClass = "unfollow-button"
+              buttonRequest = "unfollow"
+            }
 
-          dbo.collection("relationships").find({}).toArray(function(err, rresult) {
-            dbo.collection("users").find({}).toArray(function(err, fresult) {
-              var followers = []
-              var following = []
-              for (var i = 0; i < rresult.length; i++) {
-                if (rresult[i].followed_id == uresult[0].uid) {
-                  followers.push(rresult[i])
-                } else if (rresult[i].follower_id == uresult[0].uid) {
-                  following.push(rresult[i])
+            dbo.collection("relationships").find({}).toArray(function(err, rresult) {
+              dbo.collection("users").find({}).toArray(function(err, fresult) {
+                var followers = []
+                var following = []
+                for (var i = 0; i < rresult.length; i++) {
+                  if (rresult[i].followed_id == uresult[0].uid) {
+                    followers.push(rresult[i])
+                  } else if (rresult[i].follower_id == uresult[0].uid) {
+                    following.push(rresult[i])
+                  }
                 }
-              }
-              if (req.session.loggedUsr == uresult[0].username) {
-                button_txt = "Edit Profile"
-                buttonClass = "edit-profile"
-                buttonRequest = "editprofile"
-              }
-              res.render('user', {
-                username: uresult[0].username,
-                liu: req.session.loggedUsr,
-                uid: uresult[0].uid,
-                forename: uresult[0].forename,
-                surname: uresult[0].surname,
-                posts: result,
-                regOptions: menubar,
-                profile_pic: uresult[0].profile_pic,
-                favlang: uresult[0].fav_lang,
-                location: uresult[0].location,
-                buttonText: button_txt,
-                buttonClass: buttonClass,
-                buttonRequest: buttonRequest,
-                followers: followers.length,
-                following: following.length
+                if (req.session.loggedUsr == uresult[0].username) {
+                  button_txt = "Edit Profile"
+                  buttonClass = "edit-profile"
+                  buttonRequest = "editprofile"
+                }
+                res.render('user', {
+                  username: uresult[0].username,
+                  liu: req.session.loggedUsr,
+                  uid: uresult[0].uid,
+                  forename: uresult[0].forename,
+                  surname: uresult[0].surname,
+                  posts: result.reverse(),
+                  regOptions: menubar,
+                  profile_pic: uresult[0].profile_pic,
+                  favlang: uresult[0].fav_lang,
+                  location: uresult[0].location,
+                  buttonText: button_txt,
+                  buttonClass: buttonClass,
+                  buttonRequest: buttonRequest,
+                  followers: followers.length,
+                  following: following.length
+                });
+                db.close();
               });
-              db.close();
             });
           });
         });
-      });
+      }
     });
   })
 });
@@ -185,47 +191,51 @@ app.get('/post/:pid', function(req, res) {
       pid: parseInt(req.params.pid)
     };
     dbo.collection("posts").find(query).toArray(function(err, result) {
-      if (err) throw err;
-      var user = {
-        uid: result[0].uid
-      }
-      dbo.collection("users").find(user).toArray(function(err, uresult) {
+      if (result.length == 0) {
+        res.redirect('/')
+      } else {
         if (err) throw err;
-        var post = {
-          postid: result[0].pid
+        var user = {
+          uid: result[0].uid
         }
-        dbo.collection("comments").find(post).toArray(function(err, cresult) {
+        dbo.collection("users").find(user).toArray(function(err, uresult) {
           if (err) throw err;
-          dbo.collection("users").find({}).toArray(function(err, curesult) {
+          var post = {
+            postid: result[0].pid
+          }
+          dbo.collection("comments").find(post).toArray(function(err, cresult) {
             if (err) throw err;
-            for (var i = cresult.length - 1; i >= 0; i--) {
-              for (var j = 0; j < curesult.length; j++) {
-                if (cresult[i].commenterid == curesult[j].uid) {
-                  cresult[i].username = curesult[j].username
-                  cresult[i].forename = curesult[j].forename
-                  cresult[i].surname = curesult[j].surname
-                  cresult[i].profile_pic = curesult[j].profile_pic
+            dbo.collection("users").find({}).toArray(function(err, curesult) {
+              if (err) throw err;
+              for (var i = cresult.length - 1; i >= 0; i--) {
+                for (var j = 0; j < curesult.length; j++) {
+                  if (cresult[i].commenterid == curesult[j].uid) {
+                    cresult[i].username = curesult[j].username
+                    cresult[i].forename = curesult[j].forename
+                    cresult[i].surname = curesult[j].surname
+                    cresult[i].profile_pic = curesult[j].profile_pic
+                  }
                 }
               }
-            }
-            res.render('post', {
-              liu: sess.loggedUsr,
-              pid: result[0].pid,
-              postimage: result[0].post_image,
-              title: result[0].title,
-              content: result[0].content,
-              uid: result[0].uid,
-              regOptions: menubar,
-              forename: uresult[0].forename,
-              surname: uresult[0].surname,
-              username: uresult[0].username,
-              dateposted: result[0].date_posted,
-              comments: cresult.reverse()
+              res.render('post', {
+                liu: sess.loggedUsr,
+                pid: result[0].pid,
+                postimage: result[0].post_image,
+                title: result[0].title,
+                content: result[0].content,
+                uid: result[0].uid,
+                regOptions: menubar,
+                forename: uresult[0].forename,
+                surname: uresult[0].surname,
+                username: uresult[0].username,
+                dateposted: result[0].date_posted,
+                comments: cresult.reverse()
+              });
+              db.close();
             });
-            db.close();
           });
         });
-      });
+      }
     });
   })
 });
@@ -270,7 +280,7 @@ app.post('/login', function(req, res) {
       } else {
         sess.loggedId = result[0].uid
         sess.loggedUsr = result[0].username;
-        menubar = "<a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
+        menubar = "<a href=" + '/following' + ">Following</a><a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
         result[0].regOptions = menubar
         res.redirect('/user/' + result[0].username)
       }
@@ -310,7 +320,7 @@ app.post('/registration', function(req, res) {
               if (err) throw err;
               sess.loggedUsr = myobj.username;
               sess.loggedId = myobj.uid
-              menubar = "<a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
+              menubar = "<a href=" + '/following' + ">Following</a><a href=" + '/post/new' + ">New Post</a><a href=" + '/user/' + req.session.loggedUsr + ">Profile</a> <a href=" + '/logout' + ">Logout</a>";
               res.redirect('/user/' + myobj.username)
               db.close();
             });
@@ -326,12 +336,20 @@ app.post('/post/new', function(req, res) {
   MongoClient.connect(url, function(err, db) {
     var dbo = db.db("40280659");
     var d = new Date();
+    var fileName = "image_" + Date.now() + Math.floor(Math.random() * 100);
+    let sampleFile = req.files.file;
+    sampleFile.mv('./assets/post/' + fileName + '.png', function(err) {
+      if (err) {
+        return res.status(500).send(err);
+      }
+    });
     var myobj = {
       pid: Date.now() + Math.floor(Math.random() * 100),
       title: req.body.title,
       content: req.body.content,
       uid: sess.loggedId,
-      date_posted: d.toDateString()
+      date_posted: d.toDateString(),
+      post_image: fileName + ".png"
     }
     dbo.collection("posts").insertOne(myobj, function(err, result) {
       if (err) throw err;
@@ -465,13 +483,58 @@ app.post('/comment', function(req, res) {
   }
 });
 
-app.get('/user/:uid/following', function(req, res) {
-  var user = req.params.uid
-
+app.get('/following', function(req, res) {
+  sess = req.session
+  if (!sess.loggedId && !sess.loggedUsr) {
+    res.redirect('/login')
+  } else {
+    MongoClient.connect(url, function(err, db) {
+      var dbo = db.db("40280659");
+      dbo.collection("relationships").find({}).toArray(function(err, rresult) {
+        dbo.collection("users").find({}).toArray(function(err, uresult) {
+          dbo.collection("posts").find({}).toArray(function(err, presult) {
+            var posts = [];
+            for (var i = 0; i < rresult.length; i++) {
+              if (rresult[i].follower_id == req.session.loggedId) {
+                for (var j = 0; j < presult.length; j++) {
+                  if (presult[j].uid == rresult[i].followed_id) {
+                    posts.push(presult[j]);
+                  }
+                }
+              }
+            }
+            for (var i = 0; i < posts.length; i++) {
+              if (posts[i].content.length > 1600) {
+                posts[i].content = posts[i].content.slice(0, 1600) + "... <a href=" + '/post/' + posts[i].pid + ">See More</a>"
+              } else {
+                while (posts[i].content.length < 1600) {
+                  posts[i].content += " "
+                }
+              }
+            }
+            if (err) throw err;
+            for (var i = 0; i < posts.length; i++) {
+              for (var j = 0; j < uresult.length; j++) {
+                if (posts[i].uid == uresult[j].uid) {
+                  posts[i].forename = uresult[j].forename
+                  posts[i].surname = uresult[j].surname
+                  posts[i].opusr = uresult[j].username
+                }
+              }
+            }
+            res.render('home', {
+              posts: posts.reverse(),
+              liu: req.session.loggedUsr,
+              regOptions: menubar
+            });
+            db.close();
+          });
+        });
+      });
+    });
+  }
 });
 
-app.get('/user/:uid/followers', function(req, res) {
 
-});
 
 app.listen(3000);

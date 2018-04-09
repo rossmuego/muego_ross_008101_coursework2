@@ -215,6 +215,12 @@ a:link {
   text-align: right;
 }
 
+.post-author{
+  margin-top: 10px;
+  font-style: italic;
+  font-size: 20px;
+}
+
 .poster-details {
   font-style: italic;
   margin: 0 0 1% 0;
